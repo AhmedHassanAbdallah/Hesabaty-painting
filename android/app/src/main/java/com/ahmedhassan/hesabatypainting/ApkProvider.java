@@ -1,8 +1,8 @@
 /*
- * حساباتي - مزوّد ملفات بسيط لتسليم ملف التحديث لبرنامج التثبيت في أندرويد 7 وأحدث.
+ * حساباتي نقاشة - مزوّد ملفات بسيط لتسليم ملف التحديث لبرنامج التثبيت في أندرويد 7 وأحدث.
  * © 2026 أحمد حسن عبدالله - جميع الحقوق محفوظة.
  */
-package com.ahmedhassan.hesabaty;
+package com.ahmedhassan.hesabatypainting;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -28,7 +28,7 @@ public class ApkProvider extends ContentProvider {
     /** يسمح فقط بملفات التحديث داخل مجلد تنزيلات التطبيق */
     private File fileFor(Uri uri) throws FileNotFoundException {
         String name = uri.getLastPathSegment();
-        if (name == null || !name.matches("hesabaty-[0-9A-Za-z.]+\\.apk")) throw new FileNotFoundException("not allowed");
+        if (name == null || !name.matches("hesabaty-painting-[0-9A-Za-z.]+\\.apk")) throw new FileNotFoundException("not allowed");
         File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         File f = new File(dir, name);
         if (!f.exists()) throw new FileNotFoundException(name);

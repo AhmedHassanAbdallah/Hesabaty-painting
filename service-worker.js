@@ -1,9 +1,11 @@
 /*
- * حساباتي - Service Worker
+ * حساباتي نقاشة (HESABATI PAINTING) - Service Worker
+ * ذاكرة مستقلة تماماً: أسماء الكاش تبدأ بـ hpaint- ولا تلمس كاش تطبيق حساباتي للكهرباء
+ * حتى لو الاتنين منشورين على نفس النطاق (github.io).
  * © 2026 أحمد حسن عبدالله - جميع الحقوق محفوظة.
  *
  * نظام الإصدارات:
- *  - كل إصدار من التطبيق يُحفظ في ذاكرة مستقلة (hesabaty-app-<الإصدار>).
+ *  - كل إصدار من التطبيق يُحفظ في ذاكرة مستقلة (hpaint-app-<الإصدار>).
  *  - الـ Service Worker يعرض دائماً الإصدار الذي اختاره المستخدم (active)،
  *    حتى لو تم نشر إصدار أحدث على الخادم.
  *  - عند نزول إصدار جديد يتم تنزيله في الخلفية، ويسأل التطبيقُ المستخدمَ:
@@ -11,14 +13,14 @@
  *  - يتم الاحتفاظ بالإصدار السابق لإمكانية الرجوع إليه.
  *
  * عند إصدار تحديث جديد: غيّر SW_VERSION هنا + APP_VERSION في index.html + version.json
- * (أو شغّل: node tools/bump-version.js 2.1.0 "ملاحظة 1" "ملاحظة 2").
+ * (أو شغّل: node tools/bump-version.js 1.1.0 "ملاحظة 1" "ملاحظة 2").
  */
-const SW_VERSION = "2.4.0";
+const SW_VERSION = "1.0.0";
 
-const APP_PREFIX = "hesabaty-app-";
-const META_CACHE = "hesabaty-meta";
-const RUNTIME_CACHE = "hesabaty-runtime";
-const LEGACY_CACHES = ["hesabaty-v1"];
+const APP_PREFIX = "hpaint-app-";
+const META_CACHE = "hpaint-meta";
+const RUNTIME_CACHE = "hpaint-runtime";
+const LEGACY_CACHES = [];
 const META_KEY = new URL("./__version-meta__", self.location).href;
 const SCOPE_PATH = new URL("./", self.location).pathname;
 const INDEX_URL = new URL("./index.html", self.location).href;

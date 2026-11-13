@@ -1,4 +1,4 @@
-# دليل نشر تطبيق «حساباتي» على Google Play وإصدار التحديثات
+# دليل نشر تطبيق «حساباتي نقاشة» على Google Play وإصدار التحديثات
 
 © 2026 أحمد حسن عبدالله — جميع الحقوق محفوظة.
 
@@ -22,27 +22,27 @@
 2. شغّل الأمر التالي مع رقم الإصدار الجديد وملاحظات التحديث (تظهر للمستخدم):
 
    ```bash
-   node tools/bump-version.js 2.1.0 "إضافة ميزة كذا" "إصلاح مشكلة كذا"
+   node tools/bump-version.js 1.1.0 "إضافة ميزة كذا" "إصلاح مشكلة كذا"
    ```
 
    الأمر يغيّر رقم الإصدار تلقائياً في `index.html` و `service-worker.js` و `version.json`.
 3. ارفع التعديلات على GitHub (commit + push للفرع الرئيسي المنشور على GitHub Pages).
 4. خلال دقائق سيظهر للمستخدمين خيار التحديث.
 
-> مهم: لازم رقم الإصدار يكون أكبر من السابق (مثلاً 2.0.0 ← 2.0.1 ← 2.1.0).
-> لا تغيّر المفتاح `STORAGE_KEY` في الكود حتى لا تضيع بيانات المستخدمين.
+> مهم: لازم رقم الإصدار يكون أكبر من السابق (مثلاً 1.0.0 ← 1.0.1 ← 1.1.0).
+> لا تغيّر المفاتيح `hpaint_*` في الكود حتى لا تضيع بيانات المستخدمين، ولا تستخدم مفاتيح تطبيق الكهرباء أبداً.
 
 ## ثالثاً: تحويل التطبيق إلى ملف أندرويد ونشره على Google Play
 
 التطبيق مبني كتطبيق ويب تقدمي (PWA)، ويتم تغليفه في تطبيق أندرويد بتقنية
 **Trusted Web Activity (TWA)** الرسمية من جوجل:
 
-1. تأكد أن الموقع منشور ويعمل على: `https://ahmedhassanabdallah.github.io/Ezaza/`
+1. تأكد أن الموقع منشور ويعمل على: `https://ahmedhassanabdallah.github.io/Hesabaty-painting/`
    (من إعدادات المستودع ← Pages ← اختر الفرع الرئيسي).
 2. ادخل على **https://www.pwabuilder.com** واكتب رابط التطبيق، ثم اضغط **Package for stores ← Android**.
 3. في الإعدادات:
-   - Package ID مثلاً: `com.ahmedhassan.hesabaty`
-   - App name: `حساباتي`
+   - Package ID مثلاً: `com.ahmedhassan.hesabatypainting`
+   - App name: `حساباتي نقاشة`
    - Version code: ابدأ بـ `1` وزوّده عند كل رفع جديد على المتجر.
    - اختر **Create new signing key** واحتفظ بملف المفتاح وكلمة السر في مكان آمن جداً (لا يمكن التحديث على المتجر بدونه).
 4. حمّل الملف الناتج، وستجد بداخله:
@@ -50,11 +50,11 @@
    - ملف `assetlinks.json` ← لإزالة شريط العنوان من التطبيق.
 5. ملف `assetlinks.json` يجب أن يكون على الرابط:
    `https://ahmedhassanabdallah.github.io/.well-known/assetlinks.json`
-   ولأن التطبيق في مستودع فرعي (`/Ezaza/`)، أنشئ مستودعاً جديداً باسم
+   ولأن التطبيق في مستودع فرعي (`/Hesabaty-painting/`)، أنشئ مستودعاً جديداً باسم
    `ahmedhassanabdallah.github.io` وضع فيه المجلد `.well-known` وبداخله الملف، وأضف ملفاً فارغاً باسم `.nojekyll` في جذر ذلك المستودع.
 6. في **Google Play Console**:
    - أنشئ تطبيقاً جديداً وارفع ملف `.aab`.
-   - رابط سياسة الخصوصية (مطلوب): `https://ahmedhassanabdallah.github.io/Ezaza/privacy.html`
+   - رابط سياسة الخصوصية (مطلوب): `https://ahmedhassanabdallah.github.io/Hesabaty-painting/privacy.html`
    - أمان البيانات (Data safety): التطبيق **لا يجمع ولا يشارك أي بيانات** (كل البيانات محفوظة على الهاتف فقط).
    - الفئة: Business / Productivity.
    - اسم المطور: أحمد حسن عبدالله.

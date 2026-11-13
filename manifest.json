@@ -1,25 +1,49 @@
 {
-  "id": "/Ezaza/",
-  "name": "حساباتي - حاسبة وفواتير الكهرباء",
-  "short_name": "حساباتي",
-  "description": "حاسبة نقاط تأسيسات الكهرباء وإعداد فواتير العملاء بسهولة واحترافية. تصميم وتطوير: أحمد حسن عبدالله.",
+  "id": "./",
+  "name": "حساباتي نقاشة - حسابات وفواتير النقاشة والدهانات",
+  "short_name": "حساباتي نقاشة",
+  "description": "نظام متكامل لإدارة أعمال النقاشة والدهانات: مساحات الحوائط والأسقف، المقاولات، العملاء، الخامات، العمال والمصروفات، والمقايسات والفواتير الاحترافية. تصميم وتطوير: أحمد حسن عبدالله.",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "/Ezaza/",
-  "scope": "/Ezaza/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b1b33",
   "theme_color": "#0b1b33",
-  "categories": ["business", "productivity", "utilities"],
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "developer": {
     "name": "أحمد حسن عبدالله",
     "url": "https://www.facebook.com/share/1CTcsmiTif/"
   },
   "icons": [
-    { "src": "/Ezaza/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/Ezaza/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/Ezaza/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/Ezaza/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

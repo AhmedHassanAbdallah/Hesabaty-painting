@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
- * إصدار تحديث جديد لتطبيق حساباتي بأمر واحد:
- *   node tools/bump-version.js 2.1.0 "ميزة جديدة 1" "إصلاح مشكلة 2"
+ * إصدار تحديث جديد لتطبيق حساباتي نقاشة بأمر واحد:
+ *   node tools/bump-version.js 1.1.0 "ميزة جديدة 1" "إصلاح مشكلة 2"
  * يحدّث رقم الإصدار في: index.html و service-worker.js و version.json
  * © 2026 أحمد حسن عبدالله - جميع الحقوق محفوظة.
  */
@@ -10,7 +10,7 @@ const path = require('path');
 
 const [version, ...notes] = process.argv.slice(2);
 if (!/^\d+\.\d+\.\d+$/.test(version || '')) {
-  console.error('الاستخدام: node tools/bump-version.js 2.1.0 "ملاحظة التحديث 1" "ملاحظة 2"');
+  console.error('الاستخدام: node tools/bump-version.js 1.1.0 "ملاحظة التحديث 1" "ملاحظة 2"');
   process.exit(1);
 }
 const root = path.join(__dirname, '..');

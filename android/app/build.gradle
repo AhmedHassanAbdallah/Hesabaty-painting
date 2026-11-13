@@ -1,4 +1,4 @@
-// حساباتي - تطبيق أندرويد
+// حساباتي نقاشة - تطبيق أندرويد (معرّف مستقل: يتثبت جنب تطبيق الكهرباء مش فوقه)
 // © 2026 أحمد حسن عبدالله - جميع الحقوق محفوظة.
 plugins {
     id "com.android.application"
@@ -14,11 +14,11 @@ if (System.getenv("HESABATY_VERSION_NAME")) appVersionName = System.getenv("HESA
 if (System.getenv("HESABATY_VERSION_CODE")) appVersionCode = System.getenv("HESABATY_VERSION_CODE") as int
 
 android {
-    namespace "com.ahmedhassan.hesabaty"
+    namespace "com.ahmedhassan.hesabatypainting"
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.ahmedhassan.hesabaty"
+        applicationId "com.ahmedhassan.hesabatypainting"
         minSdk 21
         targetSdk 34
         versionCode appVersionCode

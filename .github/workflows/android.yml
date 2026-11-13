@@ -1,4 +1,5 @@
-# بناء تطبيق أندرويد (APK) تلقائياً ونشره كرابط تحميل مباشر
+# حساباتي نقاشة: بناء تطبيق أندرويد (APK) تلقائياً ونشره كرابط تحميل مباشر
+# مستقل عن تطبيق الكهرباء: معرّف تطبيق ومفتاح توقيع وسر (secret) خاصين بيه
 # © 2026 أحمد حسن عبدالله - جميع الحقوق محفوظة.
 name: Android APK
 
@@ -32,7 +33,7 @@ jobs:
       channel: ${{ steps.ver.outputs.channel }}
       test_version: ${{ steps.ver.outputs.test_version }}
     env:
-      HESABATY_KEY_PASSWORD: ${{ secrets.HESABATY_KEY_PASSWORD }}
+      HESABATY_KEY_PASSWORD: ${{ secrets.HESABATY_PAINTING_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -71,16 +72,16 @@ jobs:
         run: |
           if [ -z "${HESABATY_KEY_PASSWORD}" ]; then
             echo "signed=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::كلمة سر التوقيع HESABATY_KEY_PASSWORD مش متضافة — هيتعمل APK للاختبار فقط ومش هيتنشر"
+            echo "::warning::كلمة سر التوقيع HESABATY_PAINTING_KEY_PASSWORD مش متضافة — هيتعمل APK للاختبار فقط ومش هيتنشر"
             exit 0
           fi
-          KS="$RUNNER_TEMP/hesabaty.jks"
+          KS="$RUNNER_TEMP/hesabaty-painting.jks"
           if [ -f android/keystore.enc ]; then
             openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in android/keystore.enc -out "$KS" -pass env:HESABATY_KEY_PASSWORD
           else
             keytool -genkeypair -keystore "$KS" -storetype PKCS12 -alias hesabaty -keyalg RSA -keysize 4096 -validity 36500 \
               -storepass "$HESABATY_KEY_PASSWORD" -keypass "$HESABATY_KEY_PASSWORD" \
-              -dname "CN=Ahmed Hassan Abdallah, O=Hesabaty, C=EG"
+              -dname "CN=Ahmed Hassan Abdallah, O=Hesabaty Painting, C=EG"
             openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in "$KS" -out android/keystore.enc -pass env:HESABATY_KEY_PASSWORD
             echo "new_key=true" >> "$GITHUB_OUTPUT"
           fi
@@ -94,14 +95,14 @@ jobs:
       - name: Collect APK
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/release/*.apk out/hesabaty.apk
+          cp android/app/build/outputs/apk/release/*.apk out/hesabaty-painting.apk
           ls -la out
-          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs out/hesabaty.apk | head -5 || true
+          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs out/hesabaty-painting.apk | head -5 || true
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hesabaty-apk
-          path: out/hesabaty.apk
+          name: hesabaty-painting-apk
+          path: out/hesabaty-painting.apk
 
       - name: Save encrypted signing key
         if: steps.key.outputs.new_key == 'true'
@@ -124,7 +125,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: hesabaty-apk
+          name: hesabaty-painting-apk
           path: apk
       - name: Enable KVM
         run: |
@@ -156,7 +157,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: hesabaty-apk
+          name: hesabaty-painting-apk
           path: out
       - name: Publish release
         env:
@@ -164,12 +165,12 @@ jobs:
           VER: ${{ needs.build.outputs.version }}
         run: |
           python3 -c "import json;d=json.load(open('version.json'));print('\n'.join('- '+n for n in d['notes']))" > notes.md
-          printf '\n\nحمّل الملف hesabaty.apk وثبّته على موبايلك الأندرويد.\n' >> notes.md
+          printf '\n\nحمّل الملف hesabaty-painting.apk وثبّته على موبايلك الأندرويد (بيتثبت جنب تطبيق الكهرباء مش فوقه).\n' >> notes.md
           if gh release view "v$VER" >/dev/null 2>&1; then
-            gh release upload "v$VER" out/hesabaty.apk --clobber
+            gh release upload "v$VER" out/hesabaty-painting.apk --clobber
             gh release edit "v$VER" --notes-file notes.md --latest
           else
-            gh release create "v$VER" out/hesabaty.apk --title "حساباتي $VER" --notes-file notes.md --latest
+            gh release create "v$VER" out/hesabaty-painting.apk --title "حساباتي نقاشة $VER" --notes-file notes.md --latest
           fi
 
   # نسخة اختبار (مش بتظهر في فقاعة التحديث ولا في رابط التحميل الرسمي)
@@ -180,7 +181,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: hesabaty-apk
+          name: hesabaty-painting-apk
           path: out
       - name: Publish test build
         env:
@@ -188,11 +189,11 @@ jobs:
           GH_REPO: ${{ github.repository }}
           BV: ${{ needs.build.outputs.test_version }}
         run: |
-          cp out/hesabaty.apk out/hesabaty-test.apk
+          cp out/hesabaty-painting.apk out/hesabaty-painting-test.apk
           printf 'نسخة تجريبية %s للتجربة قبل النشر — مش بتوصل للمستخدمين.\nلما الإصدار الرسمي ينزل هيتثبت فوقها عادي.\n' "$BV" > notes.md
           if gh release view test >/dev/null 2>&1; then
-            gh release upload test out/hesabaty-test.apk --clobber
+            gh release upload test out/hesabaty-painting-test.apk --clobber
             gh release edit test --title "نسخة تجريبية $BV" --notes-file notes.md --prerelease
           else
-            gh release create test out/hesabaty-test.apk --prerelease --title "نسخة تجريبية $BV" --notes-file notes.md --target "$GITHUB_SHA"
+            gh release create test out/hesabaty-painting-test.apk --prerelease --title "نسخة تجريبية $BV" --notes-file notes.md --target "$GITHUB_SHA"
           fi
