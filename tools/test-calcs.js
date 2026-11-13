@@ -124,6 +124,17 @@ function serve() {
   check('تنبيه نفس المرحلة على نفس المساحة', misc.dup === 1, misc.dup);
   check('مفيش تنبيه لمرحلة مختلفة', misc.noDup === 0, misc.noDup);
 
+  console.log('\nدهان الأبواب والشبابيك والإضافات بالمقطوعية داخل الغرفة');
+  const extra = await page.evaluate(() => computeWork(normWork({ type: 'room', length: 4, width: 3, height: 3, price: 10,
+    openings: [{ kind: 'door', w: 1, h: 2.2, paint: 'duco', paintPrice: 500 }, { kind: 'door', w: 1.5, h: 2.4, paint: 'duco', lump: true, lumpPrice: 1500 }, { kind: 'window', w: 1.2, h: 1.2, count: 2, paint: 'lacquer', paintPrice: 300 }],
+    extras: [{ name: 'جنب ديكوري', price: 800 }, { name: 'سقف ديكوري (جبس بورد)', price: 2500 }] })));
+  check('خصم الفتحات من الحوائط: 42 − 8.68 + سقف 12 = 45.32 م² × 10', near(extra.mainQty, 45.32) && near(extra.mainTotal, 453.2), [extra.mainQty, extra.mainTotal]);
+  check('دهان الأبواب والشبابيك: 500 + مقطوعية 1500 + 2 × 300 = 2,600', near(extra.paintTotal, 2600), extra.paintTotal);
+  check('إضافات بالمقطوعية: جنب 800 + سقف ديكوري 2500 = 3,300', near(extra.extrasTotal, 3300), extra.extrasTotal);
+  check('إجمالي الغرفة = 453.2 + 2600 + 3300 = 6,353.2 في 6 سطور', near(extra.total, 6353.2) && extra.lines.length === 6, [extra.total, extra.lines.length]);
+  const keyed = await page.evaluate(() => settings.priceLists[0].items.filter(i => i.key).map(i => i.name));
+  check('قائمة الأسعار فيها باب/شباك لاكيه ودوكو وأوستور', keyed.length === 6 && keyed.includes('باب أوستور'), keyed);
+
   console.log('\nاختبار اليومية: 3 عمال × 400 × 5 أيام');
   const day = await page.evaluate(() => ({
     work: computeWork(normWork({ type: 'day', count: 3, qty: 5, price: 400 })).total,
@@ -138,8 +149,10 @@ function serve() {
   await page.click('#navPlus'); await page.click('#cMeasure');
   await page.waitForSelector('body.in-editor');
   await page.click('#stepBtn-rooms');
-  await page.click('#quickTypes .chip[data-t="wall"]');
+  await page.click('#worksAddBtn');
   await page.waitForSelector('#workSheet.open');
+  await page.selectOption('#wType', 'wall');
+  await page.selectOption('#wNameSel', '__other');
   await page.fill('#wName', 'حائط الصالة');
   await page.fill('#wGeo input[data-k="length"]', '5');
   await page.fill('#wGeo input[data-k="height"]', '3');
@@ -148,11 +161,32 @@ function serve() {
   await page.fill('#wPrice', '40');
   const live = await page.textContent('#wLiveTotal');
   check('الحاسبة المباشرة بتعرض 454.4', live.includes('454.4'), live);
+  await page.selectOption('#wOpenings select[data-i="0"][data-k="paint"]', 'duco');
+  await page.fill('#wOpenings input[data-i="0"][data-k="paintPrice"]', '500');
+  const live2 = await page.textContent('#wLiveTotal');
+  check('باب دوكو بـ 500: الإجمالي 954.4', live2.includes('954.4'), live2);
+  await page.click('[data-act="addExtra"]');
+  await page.selectOption('#wExtras select[data-i="0"][data-k="name"]', 'جنب ديكوري');
+  await page.fill('#wExtras input[data-i="0"][data-k="price"]', '700');
+  const live3 = await page.textContent('#wLiveTotal');
+  check('جنب ديكوري مقطوعية 700: الإجمالي 1,654.4', live3.includes('1,654.4'), live3);
   await shot('02-wall-sheet');
   await page.click('#saveWorkBtn');
   await page.waitForTimeout(400);
-  const ui = await page.evaluate(() => ({ n: getCurrentInvoice().works.length, total: computeInvoice(getCurrentInvoice()).worksTotal }));
-  check('البند اتحفظ في المشروع بإجمالي 454.4', ui.n === 1 && near(ui.total, 454.4), ui);
+  const ui = await page.evaluate(() => ({ n: getCurrentInvoice().works.length, total: computeInvoice(getCurrentInvoice()).worksTotal, duco: settings.priceLists[0].items.find(i => i.key === 'door:duco').price }));
+  check('البند اتحفظ في المشروع بإجمالي 1,654.4', ui.n === 1 && near(ui.total, 1654.4), ui);
+  check('سعر باب الدوكو (500) اتسجل في قائمة الأسعار من أول مرة', ui.duco === 500, ui.duco);
+  await page.evaluate(() => openWorkSheet(null, 'room'));
+  await page.waitForTimeout(200);
+  await page.click('[data-act="addOpening"][data-kind="door"]');
+  await page.selectOption('#wOpenings select[data-i="0"][data-k="paint"]', 'duco');
+  const auto = await page.inputValue('#wOpenings input[data-i="0"][data-k="paintPrice"]');
+  check('باب دوكو جديد: السعر بيتملى من القائمة (500)', auto === '500', auto);
+  await page.selectOption('#wOpenings select[data-i="0"][data-k="lump"]', '1');
+  await page.fill('#wOpenings input[data-i="0"][data-k="lumpPrice"]', '1800');
+  const lumpLive = await page.textContent('#wBreak');
+  check('باب كبير مقطوعية بسعر خاص 1,800', lumpLive.includes('باب دوكو (مقطوعية)') && lumpLive.includes('1,800'), lumpLive.slice(0, 120));
+  await page.evaluate(() => closeOverlay()); await page.waitForTimeout(200);
   await shot('03-works');
 
   console.log('\nاختبار المقاولة: 25,000 − عربون 5,000 − دفعة 10,000');
