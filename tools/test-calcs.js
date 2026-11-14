@@ -132,8 +132,35 @@ function serve() {
   check('دهان الأبواب والشبابيك: 500 + مقطوعية 1500 + 2 × 300 = 2,600', near(extra.paintTotal, 2600), extra.paintTotal);
   check('إضافات بالمقطوعية: جنب 800 + سقف ديكوري 2500 = 3,300', near(extra.extrasTotal, 3300), extra.extrasTotal);
   check('إجمالي الغرفة = 453.2 + 2600 + 3300 = 6,353.2 في 6 سطور', near(extra.total, 6353.2) && extra.lines.length === 6, [extra.total, extra.lines.length]);
-  const keyed = await page.evaluate(() => settings.priceLists[0].items.filter(i => i.key).map(i => i.name));
+  const keyed = await page.evaluate(() => settings.priceLists[0].items.filter(i => /^(door|window):/.test(i.key || '')).map(i => i.name));
   check('قائمة الأسعار فيها باب/شباك لاكيه ودوكو وأوستور', keyed.length === 6 && keyed.includes('باب أوستور'), keyed);
+
+  console.log('\nالسقف الديكوري والجبسون بورد والديكور بالمتر الطولي');
+  const deco = await page.evaluate(() => {
+    const R = o => computeWork(normWork(Object.assign({ type: 'room', length: 4, width: 3, height: 3, price: 40 }, o)));
+    return {
+      decor: R({ ceilingType: 'decor', ceilingPrice: 150 }),
+      same: R({ ceilingType: 'normal' }),
+      own: R({ ceilingType: 'normal', ceilingOwn: true, ceilingPrice: 60 }),
+      none: R({ ceilingType: 'none' }),
+      size: R({ ceilingType: 'normal', ceilCustom: true, ceilL: 3.4, ceilW: 2.6 }),
+      gypWall: R({ ceilingType: 'none', gypsum: [{ name: 'جبسون بورد', width: 0.7, length: 12, factor: 2 }] }),
+      gypOwn: R({ ceilingType: 'none', gypsum: [{ name: 'جبسون بورد', width: 0.7, length: 12, factor: 1.5, own: true, price: 100 }] }),
+      lin: R({ ceilingType: 'none', linears: [{ name: 'كورنيشة', length: 14, price: 35 }] }),
+      old: computeWork(normWork({ type: 'room', length: 4, width: 3, height: 3, price: 10, ceilingPrice: 6 })).total,
+      keys: settings.priceLists[0].items.filter(i => i.key).map(i => i.key)
+    };
+  });
+  check('سقف ديكوري: الحوائط 42 × 40 = 1,680 + السقف 12 × 150 = 1,800 → 3,480', near(deco.decor.mainTotal, 1680) && near(deco.decor.ceilingTotal, 1800) && near(deco.decor.total, 3480) && deco.decor.lines.length === 2, [deco.decor.mainTotal, deco.decor.ceilingTotal, deco.decor.total]);
+  check('سقف عادي بنفس سعر الحوائط: 54 م² × 40 = 2,160 في سطر واحد', near(deco.same.total, 2160) && deco.same.lines.length === 1, deco.same.total);
+  check('سقف عادي بسعر خاص 60: 1,680 + 720 = 2,400', near(deco.own.total, 2400), deco.own.total);
+  check('بدون سقف: 42 × 40 = 1,680', near(deco.none.total, 1680), deco.none.total);
+  check('مقاس سقف مختلف 3.4 × 2.6 = 8.84 → 50.84 م²', near(deco.size.mainQty, 50.84), deco.size.mainQty);
+  check('جبسون 0.7 × 12 = 8.4 م² × مضاعفة 2 = 16.8 م² × سعر الحوائط 40 = 672', near(deco.gypWall.gypsumTotal, 672) && near(deco.gypWall.total, 1680 + 672), [deco.gypWall.gypsumTotal]);
+  check('جبسون بسعر خاص: 8.4 × 1.5 = 12.6 م² × 100 = 1,260', near(deco.gypOwn.gypsumTotal, 1260), deco.gypOwn.gypsumTotal);
+  check('كورنيشة 14 م.ط × 35 = 490', near(deco.lin.linearTotal, 490) && near(deco.lin.total, 1680 + 490), deco.lin.linearTotal);
+  check('المشاريع القديمة (سعر سقف مختلف) حسابها زي ما هو: 492', near(deco.old, 492), deco.old);
+  check('قائمة الأسعار فيها السقف الديكوري والديكور الطولي والجبسون', ['ceiling:decor', 'linear:decor', 'gypsum'].every(k => deco.keys.includes(k)), deco.keys);
 
   console.log('\nاختبار اليومية: 3 عمال × 400 × 5 أيام');
   const day = await page.evaluate(() => ({
@@ -186,7 +213,19 @@ function serve() {
   await page.fill('#wOpenings input[data-i="0"][data-k="lumpPrice"]', '1800');
   const lumpLive = await page.textContent('#wBreak');
   check('باب كبير مقطوعية بسعر خاص 1,800', lumpLive.includes('باب دوكو (مقطوعية)') && lumpLive.includes('1,800'), lumpLive.slice(0, 120));
-  await page.evaluate(() => closeOverlay()); await page.waitForTimeout(200);
+  await page.selectOption('#wGeo select[data-k="ceilingType"]', 'decor');
+  await page.fill('#wGeo input[data-k="ceilingPrice"]', '150');
+  await page.click('[data-act="addLin"]');
+  await page.fill('#wExtras input[data-arr="linears"][data-k="length"]', '14');
+  await page.fill('#wExtras input[data-arr="linears"][data-k="price"]', '35');
+  await page.click('[data-act="addGyp"]');
+  await page.fill('#wExtras input[data-arr="gypsum"][data-k="width"]', '0.7');
+  await page.fill('#wExtras input[data-arr="gypsum"][data-k="length"]', '12');
+  const brk = await page.textContent('#wBreak');
+  check('نافذة الغرفة: سقف ديكوري + كورنيشة + جبسون بتظهر في الحساب', brk.includes('سقف ديكوري') && brk.includes('كورنيشة') && brk.includes('جبسون بورد'), brk.slice(0, 160));
+  await page.click('#saveWorkBtn'); await page.waitForTimeout(400);
+  const learned = await page.evaluate(() => { const l = settings.priceLists[0].items; return { decor: l.find(i => i.key === 'ceiling:decor').price, lin: (l.find(i => i.unit === 'م.ط' && i.name === 'كورنيشة') || {}).price }; });
+  check('سعر السقف الديكوري (150) والكورنيشة (35) اتسجلوا في قائمة الأسعار', learned.decor === 150 && learned.lin === 35, learned);
   await shot('03-works');
 
   console.log('\nاختبار المقاولة: 25,000 − عربون 5,000 − دفعة 10,000');
