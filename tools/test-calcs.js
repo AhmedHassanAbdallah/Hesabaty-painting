@@ -146,9 +146,9 @@ function serve() {
   check('اليومية × الأيام + الإضافي − السلف − الخصومات = 2000 + 200 − 300 − 100 = 1800', near(day.worker2.net, 1800), day.worker2.net);
 
   console.log('\nواجهة المستخدم: إضافة حائط من نافذة البند');
-  await page.click('#navPlus'); await page.click('#cMeasure');
+  await page.click('#navPlus'); await page.click('#cNew');
   await page.waitForSelector('body.in-editor');
-  await page.click('#stepBtn-rooms');
+  check('الوضع البسيط هو الأساسي وخطوات المشروع 2', await page.evaluate(() => document.body.classList.contains('simple') && document.querySelectorAll('.steps .step').length === 2));
   await page.click('#worksAddBtn');
   await page.waitForSelector('#workSheet.open');
   await page.selectOption('#wType', 'wall');
