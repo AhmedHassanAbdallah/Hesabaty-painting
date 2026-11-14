@@ -375,7 +375,7 @@
     body:not(.in-editor) .editor-only { display: none !important; }
     .ed-head { position: sticky; top: 0; z-index: 50; background: linear-gradient(135deg, var(--navy-950), var(--navy-700)); box-shadow: 0 4px 18px rgba(7,18,38,.25); }
     .ed-head .app-header { position: static; box-shadow: none; background: transparent; }
-    .steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 16px 12px; max-width: 720px; margin: 0 auto; }
+    .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 0 16px 12px; max-width: 720px; margin: 0 auto; }
     .step { border: 0; background: none; color: #9fb3d1; display: flex; flex-direction: column; gap: 6px; font-weight: 800; font-size: .8rem; text-align: right; padding: 0; }
     .step .bar { display: block; height: 5px; border-radius: 99px; background: rgba(255,255,255,.18); }
     .step.done .bar, .step.on .bar { background: var(--orange-500); }
@@ -708,8 +708,6 @@
     details.adv > summary::after { content: "▾"; margin-inline-start: auto; transition: transform .2s; }
     details.adv[open] > summary::after { transform: rotate(180deg); }
     details.adv[open] { padding-bottom: 6px; }
-    /* الوضع البسيط: الحاجات المتقدمة بتختفي لحد ما تتفعل من «المزيد» */
-    body.simple .adv-only { display: none !important; }
     .stage-row select { height: 44px; font-size: .88rem; padding: 0 8px; }
     .sc-head .grid-2 { flex: 1; min-width: 0; }
 
@@ -766,8 +764,10 @@
       <button type="button" class="icon-btn accent" onclick="openActions()" aria-label="المستندات والمشاركة"><i data-icon="share"></i></button>
     </header>
     <nav class="steps" aria-label="خطوات المشروع">
-      <button type="button" class="step" id="stepBtn-pricing" onclick="switchView('pricing')"><i class="bar"></i><span>1. العميل والأعمال<span class="step-badge hidden" id="drawerRoomCount">0</span></span></button>
-      <button type="button" class="step" id="stepBtn-summary" onclick="switchView('summary')"><i class="bar"></i><span>2. الحساب</span></button>
+      <button type="button" class="step" id="stepBtn-pricing" onclick="switchView('pricing')"><i class="bar"></i><span>1. المشروع</span></button>
+      <button type="button" class="step" id="stepBtn-rooms" onclick="switchView('rooms')"><i class="bar"></i><span>2. الأعمال<span class="step-badge hidden" id="drawerRoomCount">0</span></span></button>
+      <button type="button" class="step" id="stepBtn-costs" onclick="switchView('costs')"><i class="bar"></i><span>3. التكاليف</span></button>
+      <button type="button" class="step" id="stepBtn-summary" onclick="switchView('summary')"><i class="bar"></i><span>4. الحساب</span></button>
     </nav>
   </div>
 
@@ -777,10 +777,22 @@
     <section class="view active" id="view-home">
       <section class="home-sum">
         <div class="hs-label">المتبقي لك عند العملاء</div>
-        <div class="hs-value" style="margin-bottom:0"><span id="homeDue">0</span> <small class="cur">ج.م</small></div>
+        <div class="hs-value"><span id="homeDue">0</span> <small class="cur">ج.م</small></div>
+        <div class="hs-stats">
+          <button type="button" onclick="openDocs('inv', 'active')"><span>مشاريع جارية</span><strong id="homeActive">0</strong></button>
+          <button type="button" onclick="switchView('ledger')"><span>العملاء</span><strong id="homeCust">0</strong></button>
+          <button type="button" class="mat" onclick="openDocs('mat')"><span>خامات متبقية</span><strong id="homeMat">0</strong></button>
+        </div>
       </section>
+
       <div id="homeSetup"></div>
-      <button type="button" class="btn btn-accent" id="homeNewBtn" style="height:62px;font-size:1.1rem;border-radius:18px" onclick="quickNewInvoice('measure')"><i data-icon="plus"></i> مشروع جديد</button>
+      <h2 class="home-h">ابدأ بسرعة</h2>
+      <div class="quick">
+        <button type="button" class="q-tile dark" id="qMeasure" onclick="quickNewInvoice('measure')"><span class="q-ic orange"><i data-icon="roller"></i></span><b>مقايسة بالمقاسات</b><small>حوائط وغرف وأسقف بالمتر</small></button>
+        <button type="button" class="q-tile" id="qContract" onclick="quickNewInvoice('contract')"><span class="q-ic"><i data-icon="briefcase"></i></span><b>مقاولة إجمالية</b><small>مبلغ متفق عليه + عربون ودفعات</small></button>
+        <button type="button" class="q-tile" id="qMat" onclick="createMatList(null)"><span class="q-ic orange-soft"><i data-icon="bucket"></i></span><b>كشف خامات</b><small>معجون وبلاستيك وأدوات</small></button>
+        <button type="button" class="q-tile" id="qPay" onclick="quickPayment()"><span class="q-ic green"><i data-icon="cash"></i></span><b>تسجيل دفعة</b><small>عربون أو دفعة من عميل</small></button>
+      </div>
 
       <div id="homeAppts"></div>
 
@@ -794,6 +806,15 @@
     <!-- 1) بيانات المشروع -->
     <section class="view" id="view-pricing">
       <div id="curWarnBox"></div>
+      <div class="card">
+        <div class="card-title"><div class="t-ic orange"><i data-icon="layers"></i></div><h2>طريقة الحساب في المشروع ده</h2></div>
+        <div class="segmented" style="margin-bottom:8px">
+          <button type="button" id="modeMeasure" class="on" onclick="setBillingMode('measure')">بالمقاسات والبنود</button>
+          <button type="button" id="modeContract" onclick="setBillingMode('contract')">مقاولة إجمالية</button>
+        </div>
+        <div class="hint" id="modeHint" style="margin:0"></div>
+      </div>
+
       <div class="card">
         <div class="card-title"><div class="t-ic"><i data-icon="user"></i></div><h2>بيانات العميل</h2></div>
         <div class="field"><label for="clientName">اسم العميل</label><input type="text" id="clientName" autocomplete="off" placeholder="اكتب الاسم وسيقترح التطبيق من النوتة" oninput="saveInvoiceMeta(); renderClientSuggestions()" onfocus="renderClientSuggestions()" onblur="setTimeout(hideClientSuggestions, 250)">
@@ -810,7 +831,6 @@
       <div class="card">
         <div class="card-title"><div class="t-ic orange"><i data-icon="home"></i></div><h2>بيانات المشروع</h2><span class="tag" id="statusTag">جديد</span></div>
         <div class="field"><label for="projectName">اسم المشروع</label><input type="text" id="projectName" placeholder="مثال: تشطيب شقة الدور الثالث" oninput="saveInvoiceMeta()"></div>
-        <div class="field"><label for="modeSel">طريقة الحساب</label><select id="modeSel" onchange="setBillingMode(this.value)"><option value="measure">بالمقاسات والبنود</option><option value="contract">مقاولة إجمالية (مبلغ متفق عليه)</option></select><div class="hint" id="modeHint"></div></div>
         <div class="row-2">
           <div class="field"><label for="propertySel">نوع العقار</label><select id="propertySel"></select>
             <input type="text" id="propertyType" class="hidden" style="margin-top:6px" placeholder="اكتب نوع العقار" oninput="saveInvoiceMeta()"></div>
@@ -827,12 +847,21 @@
           </div>
           <div class="field"><label for="projectDesc">وصف العمل</label><textarea id="projectDesc" placeholder="مثال: معجون 3 سكاكين + صنفرة + سيلر + وشين بلاستيك مطفي" oninput="saveInvoiceMeta()"></textarea></div>
           <div class="field"><label for="terms">شروط الاتفاق <span class="hint">(تظهر في عرض السعر والفواتير)</span></label><textarea id="terms" placeholder="مثال: الخامات على العميل · مدة التنفيذ 20 يوم" oninput="saveInvoiceMeta()"></textarea></div>
-          <div class="field adv-only"><label for="projPriceList">قائمة الأسعار</label><select id="projPriceList" onchange="setProjectPriceList(this.value)"></select>
+          <div class="field"><label for="projPriceList">قائمة الأسعار</label><select id="projPriceList" onchange="setProjectPriceList(this.value)"></select>
             <div class="hint" id="projPriceHint"></div>
             <button type="button" class="btn btn-soft btn-sm" style="margin-top:8px;width:100%" onclick="openPriceLists()"><i data-icon="edit"></i> إدارة قوائم الأسعار ومراحل العمل</button></div>
         </details>
       </div>
 
+      <div class="card">
+        <div class="card-title"><div class="t-ic"><i data-icon="palette"></i></div><h2>ملاحظات وألوان المشروع</h2><span class="tag" id="projNotesCount">0</span></div>
+        <div id="projNotesBox"></div>
+        <button type="button" class="btn btn-soft btn-sm" style="margin-top:8px;width:100%" onclick="openNote(null, {projectId: getCurrentInvoice().id})"><i data-icon="plus"></i> إضافة ملاحظة أو لون</button>
+      </div>
+    </section>
+
+    <!-- 2) الأعمال والمقاسات -->
+    <section class="view" id="view-rooms">
       <div class="note orange hidden" id="contractScopeNote" style="margin-bottom:12px"></div>
       <div class="section-head">
         <h3>بنود الأعمال<span class="count" id="worksCountBadge">0</span></h3>
@@ -841,12 +870,6 @@
       <div id="pasteBox"></div>
       <div id="worksListContainer"></div>
       <div id="stageSummaryBox"></div>
-
-      <div class="card">
-        <div class="card-title"><div class="t-ic"><i data-icon="palette"></i></div><h2>ملاحظات وألوان المشروع</h2><span class="tag" id="projNotesCount">0</span></div>
-        <div id="projNotesBox"></div>
-        <button type="button" class="btn btn-soft btn-sm" style="margin-top:8px;width:100%" onclick="openNote(null, {projectId: getCurrentInvoice().id})"><i data-icon="plus"></i> إضافة ملاحظة أو لون</button>
-      </div>
     </section>
 
     <!-- 3) التكاليف: العمال والمصروفات والخامات -->
@@ -897,7 +920,6 @@
       <div class="card">
         <div class="card-title"><div class="t-ic"><i data-icon="chart"></i></div><h2>الأرباح والتكاليف</h2></div>
         <div id="profitBox"></div>
-        <button type="button" class="btn btn-soft" style="margin-top:12px" onclick="showView('costs')"><i data-icon="hardhat"></i> العمال والمصروفات والخامات</button>
       </div>
 
       <div class="stack">
@@ -978,13 +1000,12 @@
       <h3 class="more-h">بياناتك على المستندات</h3>
       <div class="card">
         <div class="card-title"><div class="t-ic"><i data-icon="briefcase"></i></div><h2>بياناتك على الفواتير والمقايسات</h2></div>
+        <div class="field"><label for="invoiceTitle">عنوان فاتورة الأعمال</label><input type="text" id="invoiceTitle" placeholder="كشف حساب ومستخلص أعمال نقاشة ودهانات" oninput="saveInvoiceMeta()"></div>
         <div class="row-2 stack-sm">
           <div class="field"><label for="techName">اسمك / لقبك المهني</label><input type="text" id="techName" placeholder="م/ أحمد حسن - للنقاشة والديكور" oninput="saveInvoiceMeta()"></div>
           <div class="field"><label for="techPhone">رقم الهاتف</label><input type="text" inputmode="tel" id="techPhone" placeholder="010xxxxxxxx" oninput="saveInvoiceMeta()"></div>
         </div>
         <div class="field"><label for="techAddress">العنوان <span class="hint">(اختياري)</span></label><input type="text" id="techAddress" placeholder="مثال: القاهرة - مدينة نصر" oninput="saveInvoiceMeta()"></div>
-        <details class="adv" style="margin-bottom:0"><summary>اللوجو وعنوان الفاتورة وصلاحية عرض السعر</summary>
-        <div class="field"><label for="invoiceTitle">عنوان فاتورة الأعمال</label><input type="text" id="invoiceTitle" placeholder="كشف حساب ومستخلص أعمال نقاشة ودهانات" oninput="saveInvoiceMeta()"></div>
         <div class="logo-box">
           <img id="logoThumbImg" class="hidden" src="" alt="اللوجو">
           <div class="ph" id="logoPlaceholder"><i data-icon="image"></i></div>
@@ -998,12 +1019,11 @@
         </div>
         <label class="switch"><span>إظهار اللوجو أعلى المستندات</span><input type="checkbox" id="showLogoCheck" onchange="saveInvoiceMeta()"></label>
         <div class="field" style="margin:12px 0 0"><label for="quoteDays">صلاحية عرض السعر (يوم)</label><input type="number" inputmode="numeric" id="quoteDays" min="1" step="1" placeholder="15" oninput="saveQuoteDays()"></div>
-        </details>
       </div>
 
       <h3 class="more-h">الأسعار والإعدادات</h3>
       <div class="card">
-        <div class="card-title"><div class="t-ic orange"><i data-icon="tag"></i></div><h2>قوائم الأسعار</h2><span class="tag adv-only" id="plCountTag">0</span></div>
+        <div class="card-title"><div class="t-ic orange"><i data-icon="tag"></i></div><h2>قوائم الأسعار ومراحل العمل</h2><span class="tag" id="plCountTag">0</span></div>
         <p class="hint" style="margin:-6px 0 12px">أسعارك المرجعية (متر المعجون، الصنفرة، الدهان، المتر الطولي، الباب، اليومية...) — مفيش أسعار إجبارية، إنت اللي بتحددها.</p>
         <button type="button" class="btn btn-soft" onclick="openPriceLists()"><i data-icon="edit"></i> فتح قوائم الأسعار</button>
       </div>
@@ -1020,10 +1040,6 @@
           <button type="button" id="themeDark" role="radio" onclick="setTheme('dark')">ليلي</button>
         </div>
         <div class="hint" style="margin:0">«تلقائي» يمشي مع إعداد الموبايل. تقدر كمان تبدّل بسرعة من زرار القمر/الشمس فوق.</div>
-      </div>
-
-      <div class="card">
-        <label class="switch" style="padding-top:0"><span><b style="display:block">الوضع المتقدم</b><span class="hint" style="margin:0;display:block">المراحل، وتعديل كل حائط والأجزاء والأوجه، وجوانب الفتحات، وقوائم أسعار متعددة بعملاتها</span></span><input type="checkbox" id="advancedCheck" onchange="setAdvanced(this.checked)"></label>
       </div>
 
       <h3 class="more-h">التطبيق وبياناتك</h3>
@@ -1226,12 +1242,17 @@
   <div class="grab"></div>
   <div class="sheet-head"><h3 id="createTitle">عايز تعمل إيه؟</h3><button type="button" class="close-x" onclick="closeOverlay()" aria-label="إغلاق"><i data-icon="x"></i></button></div>
   <div class="create-list">
-    <button type="button" class="create-opt dark" id="cNew" onclick="createAction('measure')"><span class="q-ic orange"><i data-icon="roller"></i></span><span><b>مشروع جديد</b><small>غرف وحوائط وأسقف — أو مقاولة إجمالية</small></span></button>
+    <button type="button" class="create-opt dark" id="cMeasure" onclick="createAction('measure')"><span class="q-ic orange"><i data-icon="roller"></i></span><span><b>مشروع بالمقاسات</b><small>حوائط وغرف وأسقف ومراحل — كل بند بسعره</small></span></button>
+    <button type="button" class="create-opt" id="cContract" onclick="createAction('contract')"><span class="q-ic"><i data-icon="briefcase"></i></span><span><b>مقاولة إجمالية</b><small>مبلغ متفق عليه + عربون ودفعات وشروط</small></span></button>
+    <button type="button" class="create-opt" id="cMat" onclick="createAction('mat')"><span class="q-ic orange-soft"><i data-icon="bucket"></i></span><span><b>كشف خامات</b><small>معجون وسيلر وبلاستيك وأدوات</small></span></button>
     <div class="create-row">
       <button type="button" class="create-opt" id="cPay" onclick="createAction('pay')"><span class="q-ic green"><i data-icon="cash"></i></span><span><b>تسجيل دفعة</b></span></button>
       <button type="button" class="create-opt" id="cCust" onclick="createAction('cust')"><span class="q-ic"><i data-icon="user"></i></span><span><b>عميل جديد</b></span></button>
     </div>
-    <button type="button" class="create-opt" id="cMat" onclick="createAction('mat')"><span class="q-ic orange-soft"><i data-icon="bucket"></i></span><span><b>كشف خامات</b><small>معجون وسيلر وبلاستيك وأدوات</small></span></button>
+    <div class="create-row">
+      <button type="button" class="create-opt" id="cNote" onclick="createAction('note')"><span class="q-ic orange-soft"><i data-icon="palette"></i></span><span><b>ملاحظة / لون</b></span></button>
+      <button type="button" class="create-opt" id="cPrices" onclick="createAction('prices')"><span class="q-ic"><i data-icon="tag"></i></span><span><b>قوائم الأسعار</b></span></button>
+    </div>
   </div>
 </div>
 
@@ -1510,7 +1531,7 @@
   const BACKUP_APP_ID = 'hesabaty-painting';
   const DEFAULT_TITLE = 'كشف حساب ومستخلص أعمال نقاشة ودهانات';
   const DEFAULT_TECH = 'للنقاشة والدهانات والديكورات';
-  const VIEW_TITLES = { home: 'حساباتي نقاشة', pricing: 'المشروع والأعمال', rooms: 'المشروع والأعمال', costs: 'التكاليف', summary: 'الحساب النهائي', docs: 'المشاريع والكشوفات', ledger: 'العملاء (النوتة)', more: 'المزيد' };
+  const VIEW_TITLES = { home: 'حساباتي نقاشة', pricing: 'بيانات المشروع', rooms: 'الأعمال والمقاسات', costs: 'التكاليف', summary: 'الحساب النهائي', docs: 'المشاريع والكشوفات', ledger: 'العملاء (النوتة)', more: 'المزيد' };
   const EDITOR_VIEWS = ['pricing', 'rooms', 'costs', 'summary'];
 
   /* ---------------- محرك النقاشة: الأنواع والقوائم الجاهزة ---------------- */
@@ -1658,7 +1679,7 @@
   let appData = { invoiceTitle: DEFAULT_TITLE, techName: DEFAULT_TECH, techPhone: '', techAddress: '', logoData: '', showLogo: false, currentId: null, invoices: [] };
   let customers = [];
   let notes = [];
-  let settings = { advanced: false, lastMode: 'measure', projectSeq: 0, receiptSeq: 0, quoteDays: 15, stageNames: DEFAULT_STAGES.slice(), priceLists: [], activePriceListId: null };
+  let settings = { lastMode: 'measure', projectSeq: 0, receiptSeq: 0, quoteDays: 15, stageNames: DEFAULT_STAGES.slice(), priceLists: [], activePriceListId: null };
   let currentCustomerId = null;
   let editingCustomerId = null;
   let editingTxnId = null;
@@ -1919,12 +1940,11 @@
     const isEd = EDITOR_VIEWS.includes(key);
     document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + key));
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.id === 'navBtn-' + key));
-    // خطوتين: (1) العميل والأعمال  (2) الحساب — والتكاليف صفحة جانبية من «الحساب»
-    const order = { pricing: 0, rooms: 0, costs: 1, summary: 1 }[key];
-    ['pricing', 'summary'].forEach((v, i) => { const b = document.getElementById('stepBtn-' + v); b.classList.toggle('on', i === order); b.classList.toggle('done', order > i); });
+    const order = EDITOR_VIEWS.indexOf(key);
+    EDITOR_VIEWS.forEach((v, i) => { const b = document.getElementById('stepBtn-' + v); b.classList.toggle('on', i === order); b.classList.toggle('done', order > i); });
     document.getElementById('headerTitle').textContent = VIEW_TITLES[key] || '';
     document.getElementById('tabTitle').textContent = VIEW_TITLES[key] || 'حساباتي نقاشة';
-    document.getElementById('addRoomFab').classList.toggle('hidden', key !== 'pricing');
+    document.getElementById('addRoomFab').classList.toggle('hidden', key !== 'rooms');
     if (isEd) renderEditorBar();
     if (key === 'home') renderHome();
     if (key === 'docs') setDocsTab(docsTab);
@@ -2310,7 +2330,6 @@
     ensureSettings();
     applyCurrency();
     applyTheme();
-    applyMode();
     loadCustomers();
     loadMatLists();
     loadNotes();
@@ -2445,9 +2464,11 @@
   // مشروع جديد: يسأل المستخدم الأول هيحاسب بالمقاسات ولا مقاولة
   let pendingNewInvoiceCustomer = null;
   function startNewInvoice(customerId = null) {
-    // مشروع جديد على طول (طريقة الحساب بتتغير من صفحة المشروع)
     pendingNewInvoiceCustomer = customerId || null;
-    chooseNewInvoiceMode('measure');
+    const last = settings.lastMode === 'contract' ? 'contract' : 'measure';
+    document.getElementById('pickModeMeasure').classList.toggle('on', last === 'measure');
+    document.getElementById('pickModeContract').classList.toggle('on', last === 'contract');
+    openOverlay('mode');
   }
   function chooseNewInvoiceMode(mode) {
     const customerId = pendingNewInvoiceCustomer;
@@ -2550,7 +2571,8 @@
   function renderProjectForm() {
     const inv = getCurrentInvoice();
     const contract = inv.billingMode === 'contract';
-    document.getElementById('modeSel').value = contract ? 'contract' : 'measure';
+    document.getElementById('modeMeasure').classList.toggle('on', !contract);
+    document.getElementById('modeContract').classList.toggle('on', contract);
     document.getElementById('modeHint').innerHTML = contract
       ? 'مبلغ واحد متفق عليه للشغل كله. البنود في خطوة «الأعمال» بتوصف نطاق الشغل والمساحات ومش بتدخل في الحساب.'
       : 'كل بند بمساحته وسعره: حوائط وغرف وأسقف بخصم الأبواب والشبابيك، ومتر طولي، وقطعة، ويومية، ومراحل.';
@@ -2602,9 +2624,7 @@
   }
   function initWorkSheet() {
     const ts = document.getElementById('wType');
-    // 4 أنواع أساسية، والباقي تحت «أنواع تانية»
-    const opt = k => `<option value="${k}">${WORK_TYPES[k].label}</option>`;
-    ts.innerHTML = ['room', 'wall', 'ceiling', 'lump'].map(opt).join('') + `<optgroup label="أنواع تانية">${['sqm', 'linear', 'piece', 'day'].map(opt).join('')}</optgroup>`;
+    ts.innerHTML = TYPE_ORDER.map(k => `<option value="${k}">${WORK_TYPES[k].label}</option>`).join('');
     ts.addEventListener('change', () => switchWorkType(ts.value));
     const sheet = document.getElementById('workSheet');
     sheet.addEventListener('input', e => { if (e.target.tagName !== 'SELECT' && bindWorkInput(e.target)) updateWorkLive(); });
@@ -2827,7 +2847,7 @@
     let p = '';
     const priceLabel = t === 'linear' ? 'سعر المتر الطولي' : t === 'piece' ? 'سعر القطعة' : t === 'day' ? 'اليومية (للعامل في اليوم)' : t === 'lump' ? 'المبلغ (مقطوعية)' : 'سعر المتر (م²)';
     if (area && wfStagesOn) {
-      p += `<div class="note" style="margin-bottom:12px">سعر المتر بالمراحل = <strong>${fmt(unitPriceOf(normWork({ type: 'sqm', stages: wf.stages })))} ${esc(CUR)}</strong> — ${settings.advanced ? 'عدّل المراحل من «خيارات متقدمة»' : 'لتعديلها فعّل «الوضع المتقدم» من «المزيد»'}.</div>`;
+      p += `<div class="note" style="margin-bottom:12px">سعر المتر بالمراحل = <strong>${fmt(unitPriceOf(normWork({ type: 'sqm', stages: wf.stages })))} ${esc(CUR)}</strong> — عدّل المراحل من «خيارات متقدمة».</div>`;
     } else {
       p += `<div class="field"><label for="wPrice">${priceLabel} (<span class="cur">${esc(CUR)}</span>)</label><input type="number" inputmode="decimal" min="0" step="any" id="wPrice" data-k="price" data-t="n" value="${valOrEmpty(wf.price)}" placeholder="0"></div>`;
       const last = lastPriceFor(wf.name, t);
@@ -2847,9 +2867,8 @@
     const t = wf.type;
     const det = document.getElementById('wAdv');
     const applies = WORK_TYPES[t].area;
-    const show = applies && settings.advanced;
-    det.classList.toggle('hidden', !show);
-    if (!show) { document.getElementById('wAdvBody').innerHTML = ''; return; }
+    det.classList.toggle('hidden', !applies);
+    if (!applies) { document.getElementById('wAdvBody').innerHTML = ''; return; }
     det.open = wfAdvOpen;
     let a = '';
     if (t === 'wall') {
@@ -3372,6 +3391,9 @@
   function renderHome() {
     const tot = ledgerTotals();
     document.getElementById('homeDue').textContent = fmt(tot.due);
+    document.getElementById('homeActive').textContent = appData.invoices.filter(i => i.status === 'active').length;
+    document.getElementById('homeCust').textContent = customers.length;
+    document.getElementById('homeMat').textContent = fmt(tot.mat);
     const name = String(appData.techName || '').split(' - ')[0].trim();
     document.getElementById('greetLine').textContent = name && name !== DEFAULT_TECH ? `أهلاً، ${name}` : 'أهلاً بيك';
     const apl = settings.priceLists.find(l => l.id === settings.activePriceListId) || settings.priceLists[0];
@@ -3400,10 +3422,12 @@
     else if (currentView === 'costs') { const p = projectProfit(inv, t); lbl.textContent = 'التكاليف المدفوعة'; val.textContent = `${fmt(p.costPaid)} ${CUR}`; }
     else { lbl.textContent = t.mode === 'contract' ? 'قيمة المقاولة' : 'إجمالي الشغل'; val.textContent = `${fmt(t.grandTotal)} ${CUR}`; }
     sub.textContent = invoiceMeta(inv, t);
-    next.textContent = currentView === 'pricing' || currentView === 'rooms' ? 'التالي: الحساب' : currentView === 'costs' ? 'رجوع للحساب' : 'تم ✓ حفظ';
+    next.textContent = currentView === 'pricing' ? 'التالي: الأعمال' : currentView === 'rooms' ? 'التالي: التكاليف' : currentView === 'costs' ? 'التالي: الحساب' : 'تم ✓ حفظ';
   }
   function editorNext() {
-    if (currentView !== 'summary') showView('summary');
+    if (currentView === 'pricing') showView('rooms');
+    else if (currentView === 'rooms') showView('costs');
+    else if (currentView === 'costs') showView('summary');
     else { saveToStorage(); exitEditor(); showAppToast('✔️ تم حفظ المشروع'); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -3518,18 +3542,6 @@
     if (!settings.priceLists.some(l => l.id === settings.activePriceListId)) settings.activePriceListId = settings.priceLists[0].id;
     if (!(settings.quoteDays > 0)) settings.quoteDays = 15;
     saveSettings();
-  }
-  // الوضع البسيط (الأساسي) / الوضع المتقدم
-  function applyMode() {
-    document.body.classList.toggle('simple', !settings.advanced);
-    const c = document.getElementById('advancedCheck');
-    if (c) c.checked = !!settings.advanced;
-  }
-  function setAdvanced(v) {
-    settings.advanced = !!v;
-    saveSettings();
-    applyMode();
-    showAppToast(v ? '✔️ الوضع المتقدم اتفعّل: المراحل وتعديل الحوائط وقوائم الأسعار المتعددة' : '✔️ رجعت للوضع البسيط');
   }
   function getCustomer(id) { return customers.find(c => c.id === id) || null; }
   // مشاريع العميل المرتبطة (الأقدم أولاً)
@@ -4209,11 +4221,11 @@
     document.getElementById('pricesPageSub').textContent = `${settings.priceLists.length} قائمة · ${settings.stageNames.length} مرحلة عمل`;
     const others = settings.priceLists.filter(x => x.id !== l.id);
     document.getElementById('pricesBody').innerHTML = `
-      <div class="card adv-only">
+      <div class="card">
         <div class="chips" style="margin-bottom:6px">${settings.priceLists.map(x => `<button type="button" class="chip${x.id === l.id ? ' on' : ''}" onclick="plSelect('${esc(x.id)}')">${esc(x.name)}${x.id === settings.activePriceListId ? ' ★' : ''}</button>`).join('')}</div>
         <button type="button" class="btn btn-soft btn-sm" style="width:100%" onclick="plNew()">${icon('plus')} قائمة أسعار جديدة</button>
       </div>
-      <div class="card adv-only">
+      <div class="card">
         <div class="card-title"><div class="t-ic orange">${icon('tag')}</div><h2>بيانات القائمة</h2><span class="tag">${esc(lc.sym)}</span></div>
         <div class="field"><label for="plName">اسم القائمة</label><input type="text" id="plName" value="${esc(l.name)}" oninput="plSetName(this.value)"></div>
         <div class="field"><label for="plCur">عملة القائمة</label><select id="plCur" onchange="plSetCurrency(this.value)">${CURRENCIES.map(c => `<option value="${c.code}"${c.code === l.currency ? ' selected' : ''}>${esc(c.country)} — ${esc(c.name)} (${esc(c.sym)})</option>`).join('')}</select>
@@ -4242,7 +4254,7 @@
           </div>`).join('')}</div>
         <button type="button" class="btn btn-soft btn-sm" style="width:100%" onclick="plItemAdd()">${icon('plus')} إضافة بند للقائمة</button>
       </div>
-      <div class="card adv-only">
+      <div class="card">
         <div class="card-title"><div class="t-ic orange">${icon('copy')}</div><h2>نسخ واستنساخ</h2></div>
         <div class="btn-row" style="margin-bottom:10px">
           <button type="button" class="btn btn-ghost" onclick="plDuplicate()">${icon('copy')} نسخ القائمة</button>
@@ -4251,7 +4263,7 @@
         ${others.length ? `<div class="field" style="margin-bottom:8px"><label for="plCopyFrom">استنساخ الأسعار من قائمة تانية (للبنود بنفس الاسم)</label><select id="plCopyFrom">${others.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select></div>
           <button type="button" class="btn btn-soft btn-sm" style="width:100%" onclick="plCopyPrices()">استنساخ الأسعار</button>` : '<p class="hint" style="margin:0">اعمل نسخة من القائمة (مثلاً لعملاء الشركات) وعدّل أسعارها.</p>'}
       </div>
-      <div class="card adv-only">
+      <div class="card">
         <div class="card-title"><div class="t-ic">${icon('layers')}</div><h2>مراحل العمل</h2><span class="tag">${settings.stageNames.length}</span></div>
         <p class="hint" style="margin:-6px 0 10px">المراحل اللي بتظهر في «تسعير بالمراحل». عدّل الأسماء أو احذف أو ضيف مراحل جديدة.</p>
         ${settings.stageNames.map((s, i) => `<div class="stage-row" style="grid-template-columns:1fr 40px"><input type="text" value="${esc(s)}" oninput="stageSet(${i}, this.value)"><button type="button" class="btn btn-danger btn-icon" onclick="stageDel(${i})" aria-label="حذف">${icon('x')}</button></div>`).join('')}
