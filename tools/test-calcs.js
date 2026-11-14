@@ -213,6 +213,26 @@ function serve() {
   check('صافي الربح النقدي = 15,000 − 3,500 = 11,500 (المستحقات مش ربح)', near(contract.p.cashProfit, 11500), contract.p.cashProfit);
   check('الربح المتوقع = 25,000 − 6,500 = 18,500', near(contract.p.expectedProfit, 18500), contract.p.expectedProfit);
 
+  console.log('\nدرجة اللون وكودها');
+  await page.evaluate(() => openNote(null, { projectId: getCurrentInvoice().id }));
+  await page.waitForSelector('#noteSheet.open');
+  const dirs = await page.evaluate(() => getComputedStyle(document.getElementById('nHex')).direction);
+  check('اختيار اللون اتجاهه من الشمال لليمين (الأسهم مش معكوسة)', dirs === 'ltr', dirs);
+  await page.fill('#nTitle', 'حوائط الصالة');
+  await page.fill('#nHexText', 'efe6d2');
+  const pick = await page.inputValue('#nHex');
+  check('كتابة الكود بتغيّر اللون', pick === '#efe6d2', pick);
+  await page.evaluate(() => { const p = document.getElementById('nHex'); p.value = '#1a3a66'; p.dispatchEvent(new Event('input', { bubbles: true })); });
+  const code = await page.inputValue('#nHexText');
+  check('اختيار اللون بيكتب الكود', code === '#1A3A66', code);
+  await page.evaluate(() => saveNote()); await page.waitForTimeout(300);
+  const card = await page.evaluate(() => document.getElementById('projNotesBox').textContent);
+  check('الكود ظاهر في كارت الملاحظة', card.includes('#1A3A66'), card.slice(0, 80));
+  await page.evaluate(() => openProjectDoc('invoice')); await page.waitForTimeout(200);
+  const chip = await page.textContent('#printSheet .inv-pricing');
+  check('الكود ظاهر في الفاتورة المطبوعة', chip.includes('#1A3A66'), chip);
+  await page.evaluate(() => closeOverlay()); await page.waitForTimeout(150);
+
   console.log('\nالمستندات PDF');
   for (const type of ['estimate', 'quote', 'invoice', 'final', 'report']) {
     await page.evaluate(t => openProjectDoc(t), type);

@@ -655,7 +655,7 @@
        حتى لو الطابعة أو أندرويد فرضوا هوامش صفر وتجاهلوا هوامش الصفحة */
     /* ============ حساباتي نقاشة: محرك حسابات النقاشة ============ */
     input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); flex-shrink: 0; }
-    input[type="color"] { width: 100%; height: 48px; border: 1.5px solid var(--border); border-radius: 13px; background: var(--surface-2); padding: 4px; }
+    input[type="color"] { direction: ltr; width: 100%; height: 48px; border: 1.5px solid var(--border); border-radius: 13px; background: var(--surface-2); padding: 4px; }
     .type-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
     .type-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px 6px; border: 1.5px solid var(--border); background: var(--surface-2); border-radius: 13px; font-size: .74rem; font-weight: 800; color: var(--muted); min-width: 0; }
     .type-btn svg { width: 20px; height: 20px; }
@@ -1198,7 +1198,11 @@
       <div class="field"><label for="nColorName">اسم اللون</label><input type="text" id="nColorName" placeholder="مثال: أوف وايت"></div>
       <div class="field"><label for="nColorCode">كود اللون</label><input type="text" id="nColorCode" dir="ltr" style="text-align:right" placeholder="مثال: 1024"></div>
       <div class="field"><label for="nBrand">الشركة / نوع الخامة</label><input type="text" id="nBrand" placeholder="مثال: جوتن - بلاستيك مطفي"></div>
-      <div class="field"><label for="nHex">درجة اللون</label><input type="color" id="nHex" value="#f5f0e6"></div>
+      <div class="field"><label for="nHexText">درجة اللون وكودها</label>
+        <div dir="ltr" style="display:flex;gap:6px;align-items:center">
+          <input type="color" id="nHex" dir="ltr" value="#f5f0e6" style="width:52px;flex-shrink:0;padding:2px" aria-label="اختار درجة اللون" oninput="syncHex('picker')">
+          <input type="text" id="nHexText" dir="ltr" maxlength="7" placeholder="#F5F0E6" autocomplete="off" style="text-align:left;font-family:ui-monospace,monospace;padding:0 10px" oninput="syncHex('text')">
+        </div></div>
     </div>
   </div>
   <div id="nDateBox" class="row-2 hidden">
@@ -4094,7 +4098,7 @@
     const K = NOTE_KINDS[n.kind];
     const sw = n.kind === 'color' && n.colorHex ? `<div class="swatch" style="background:${esc(n.colorHex)}"></div>` : `<div class="swatch" style="background:var(--accent-soft);color:var(--accent)">${icon(K.icon)}</div>`;
     const meta = [];
-    if (n.kind === 'color') meta.push([n.colorName, n.colorCode ? 'كود ' + n.colorCode : '', n.brand].filter(Boolean).join(' · '));
+    if (n.kind === 'color') meta.push([n.colorName, n.colorCode ? 'كود ' + n.colorCode : '', n.brand, hexCode(n.colorHex) ? 'درجة ' + hexCode(n.colorHex) : ''].filter(Boolean).join(' · '));
     if (n.kind === 'appointment' && n.date) meta.push(`📅 ${fmtDate(n.date)}${n.time ? ' ' + n.time : ''}`);
     if (n.body) meta.push(n.body.length > 70 ? n.body.slice(0, 70) + '…' : n.body);
     const pl = projectLabel(n.projectId);
@@ -4109,7 +4113,7 @@
     fbox.onclick = e => { const b = e.target.closest('.chip'); if (b) { noteFilter = b.dataset.f; renderNotesList(); } };
     const q = (document.getElementById('noteSearch').value || '').trim();
     const list = notes.filter(n => (noteFilter === 'all' || n.kind === noteFilter) &&
-      (!q || [n.title, n.body, n.colorName, n.colorCode, n.brand, projectLabel(n.projectId)].some(v => (v || '').includes(q)))).sort(noteSort);
+      (!q || [n.title, n.body, n.colorName, n.colorCode, n.brand, hexCode(n.colorHex), projectLabel(n.projectId)].some(v => (v || '').includes(q)))).sort(noteSort);
     const box = document.getElementById('notesList');
     box.innerHTML = list.length ? list.map(noteCardHTML).join('') : `<div class="card empty"><div class="big">${icon('palette')}</div><p>${notes.length ? 'لا توجد ملاحظات مطابقة.' : 'سجّل ألوان الدهانات وأكوادها، وتفاصيل الاتفاق، ومواعيدك وتعليمات التنفيذ.'}</p></div>`;
     bindNoteCards(box);
@@ -4117,6 +4121,15 @@
   }
   function initNoteSheet() {
     document.getElementById('nKindSel').innerHTML = Object.keys(NOTE_KINDS).map(k => `<option value="${k}">${NOTE_KINDS[k].label}</option>`).join('');
+  }
+  // كود درجة اللون: من الاختيار للكود ومن الكود للاختيار
+  function hexCode(h) { return /^#[0-9a-f]{6}$/i.test(h || '') ? h.toUpperCase() : ''; }
+  function syncHex(from) {
+    const pick = document.getElementById('nHex'), txt = document.getElementById('nHexText');
+    if (from === 'picker') { txt.value = pick.value.toUpperCase(); return; }
+    let v = txt.value.trim();
+    if (v && v[0] !== '#') v = '#' + v;
+    if (/^#[0-9a-f]{6}$/i.test(v)) pick.value = v.toLowerCase();
   }
   function setNoteKind(k) {
     noteKind = NOTE_KINDS[k] ? k : 'general';
@@ -4136,6 +4149,7 @@
     document.getElementById('nColorCode').value = v.colorCode;
     document.getElementById('nBrand').value = v.brand;
     document.getElementById('nHex').value = v.colorHex || '#f5f0e6';
+    document.getElementById('nHexText').value = hexCode(v.colorHex || '#f5f0e6');
     document.getElementById('nDate').value = v.date;
     document.getElementById('nTime').value = v.time;
     const sel = document.getElementById('nProject');
@@ -4915,7 +4929,7 @@
   const secHTML = (n, title) => `<h2 class="inv-sec"><span class="n">${n}</span><span ${CE}>${title}</span></h2>`;
   function colorChips(inv) {
     return notes.filter(n => n.projectId === inv.id && n.kind === 'color').map(n =>
-      `<span class="inv-chip navy" ${CE}>${n.colorHex ? `<i class="color-dot" style="background:${esc(n.colorHex)}"></i>` : ''}${esc(n.title || 'لون')}: <b>${esc([n.colorName, n.colorCode ? 'كود ' + n.colorCode : '', n.brand].filter(Boolean).join(' · '))}</b></span>`);
+      `<span class="inv-chip navy" ${CE}>${n.colorHex ? `<i class="color-dot" style="background:${esc(n.colorHex)}"></i>` : ''}${esc(n.title || 'لون')}: <b>${esc([n.colorName, n.colorCode ? 'كود ' + n.colorCode : '', n.brand].filter(Boolean).join(' · '))}</b>${hexCode(n.colorHex) ? ` <span dir="ltr">${hexCode(n.colorHex)}</span>` : ''}</span>`);
   }
   function termsList(inv) { return String(inv.terms || '').split(/\n|·/).map(s => s.trim()).filter(Boolean).map(esc); }
   // جدول الأعمال: بالأسعار (مقايسة/فاتورة) أو نطاق الأعمال فقط (مقاولة)
