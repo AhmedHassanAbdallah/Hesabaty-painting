@@ -151,7 +151,8 @@ jobs:
 
   release:
     needs: [build, test]
-    if: needs.build.outputs.signed == 'true' && github.ref == 'refs/heads/main'
+    # النشر للمستخدمين (فقاعة التحديث) من الفرع الأساسي للمستودع أياً كان اسمه
+    if: needs.build.outputs.signed == 'true' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
